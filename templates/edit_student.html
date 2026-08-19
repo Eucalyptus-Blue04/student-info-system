@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0">编辑{% if current_user.role == 'student' %}个人{% else %}学生{% endif %}信息</h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            <div class="row">
+                <!-- 基本信息（只读） -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">学号</label>
+                    <input type="text" class="form-control" value="{{ student.student_id }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">姓名</label>
+                    <input type="text" class="form-control" value="{{ student.name }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">院系</label>
+                    <input type="text" class="form-control" value="{{ student.class_.major.department.name }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">专业</label>
+                    <input type="text" class="form-control" value="{{ student.class_.major.name }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">班级</label>
+                    <input type="text" class="form-control" value="{{ student.class_.name }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">入学日期</label>
+                    <input type="text" class="form-control" value="{{ student.admission_date.strftime('%Y-%m-%d') }}" readonly>
+                </div>
+
+                <!-- 可编辑信息 -->
+                {% if current_user.role != 'student' %}
+                <div class="col-md-6 mb-3">
+                    <label for="gender" class="form-label">性别 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="gender" name="gender" required>
+                        <option value="男" {% if student.gender == '男' %}selected{% endif %}>男</option>
+                        <option value="女" {% if student.gender == '女' %}selected{% endif %}>女</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="age" class="form-label">年龄 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="age" name="age" value="{{ student.age }}" required>
+                </div>
+                {% endif %}
+
+                <!-- 联系信息（学生可编辑） -->
+                <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">联系电话 <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ student.phone }}" required 
+                           pattern="[0-9]{11}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">电子邮箱 <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ student.email }}" required>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="address" class="form-label">家庭住址 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="address" name="address" rows="3" required>{{ student.address }}</textarea>
+                </div>
+            </div>            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">保存修改</button>
+                <a href="{{ url_for('student_detail', id=student.id) }}" class="btn btn-secondary">返回</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0">批量导入学生</h3>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <h5>导入说明</h5>
+            <ul>
+                <li>请使用JSON格式上传学生数据</li>
+                <li>必填字段：student_id（学号）、name（姓名）、gender（性别）、age（年龄）、class_id（班级ID）、admission_date（入学日期）</li>
+                <li>选填字段：phone（电话）、email（邮箱）、address（地址）</li>
+            </ul>
+        </div>
+
+        <div class="mb-4">
+            <h5>数据模板</h5>
+            <pre class="bg-light p-3 rounded"><code>[
+    {
+        "student_id": "2024001001",
+        "name": "张三",
+        "gender": "男",
+        "age": 18,
+        "class_id": 1,
+        "admission_date": "2024-09-01",
+        "phone": "13800138000",
+        "email": "zhangsan@example.com",
+        "address": "北京市海淀区"
+    }
+]</code></pre>
+        </div>
+
+        <div class="mb-3">
+            <label for="importData" class="form-label">粘贴JSON数据</label>
+            <textarea class="form-control" id="importData" rows="10" placeholder='[{"student_id": "...", "name": "...", ...}]'></textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitImport()">
+                <i class="fas fa-upload me-2"></i>提交导入任务
+            </button>
+            <a href="{{ url_for('students') }}" class="btn btn-secondary">返回列表</a>
+        </div>
+
+        <!-- 任务状态显示 -->
+        <div id="taskStatus" class="mt-4" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">任务状态</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>任务ID：</strong><span id="taskId">-</span></p>
+                    <p><strong>状态：</strong><span id="taskStatusText" class="badge bg-info">处理中</span></p>
+                    <div id="taskResult" style="display: none;">
+                        <hr>
+                        <p><strong>导入结果：</strong></p>
+                        <p>成功：<span id="successCount" class="text-success">0</span> 条</p>
+                        <p>失败：<span id="failCount" class="text-danger">0</span> 条</p>
+                        <div id="errorList" style="display: none;">
+                            <p><strong>错误详情：</strong></p>
+                            <ul id="errors"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let pollTimer = null;
+
+function submitImport() {
+    const data = document.getElementById('importData').value.trim();
+
+    if (!data) {
+        alert('请输入要导入的数据');
+        return;
+    }
+
+    let students;
+    try {
+        students = JSON.parse(data);
+        if (!Array.isArray(students)) {
+            alert('数据格式错误：应为数组格式');
+            return;
+        }
+    } catch (e) {
+        alert('JSON格式错误：' + e.message);
+        return;
+    }
+
+    // 禁用提交按钮
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>提交中...';
+
+    // 提交异步任务
+    fetch('/student/batch_import', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ students: students })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('taskId').textContent = data.task_id;
+            document.getElementById('taskStatus').style.display = 'block';
+
+            // 轮询任务状态
+            pollTaskStatus(data.task_id);
+        } else {
+            alert('提交失败：' + data.message);
+            resetSubmitBtn();
+        }
+    })
+    .catch(error => {
+        alert('请求失败：' + error.message);
+        resetSubmitBtn();
+    });
+}
+
+function pollTaskStatus(taskId) {
+    pollTimer = setInterval(() => {
+        fetch(`/task/${taskId}/status`)
+            .then(response => response.json())
+            .then(data => {
+                const statusText = document.getElementById('taskStatusText');
+
+                if (data.status === 'SUCCESS') {
+                    statusText.textContent = '完成';
+                    statusText.className = 'badge bg-success';
+                    showResult(data.result);
+                    clearInterval(pollTimer);
+                    resetSubmitBtn();
+                } else if (data.status === 'FAILURE') {
+                    statusText.textContent = '失败';
+                    statusText.className = 'badge bg-danger';
+                    clearInterval(pollTimer);
+                    resetSubmitBtn();
+                } else {
+                    statusText.textContent = '处理中';
+                    statusText.className = 'badge bg-info';
+                }
+            })
+            .catch(error => {
+                console.error('轮询失败：', error);
+            });
+    }, 2000);  // 每2秒查询一次
+}
+
+function showResult(result) {
+    if (!result) return;
+
+    document.getElementById('taskResult').style.display = 'block';
+    document.getElementById('successCount').textContent = result.success_count || 0;
+    document.getElementById('failCount').textContent = result.fail_count || 0;
+
+    if (result.errors && result.errors.length > 0) {
+        document.getElementById('errorList').style.display = 'block';
+        const errorsUl = document.getElementById('errors');
+        errorsUl.innerHTML = '';
+        result.errors.forEach(error => {
+            const li = document.createElement('li');
+            li.textContent = error;
+            li.className = 'text-danger';
+            errorsUl.appendChild(li);
+        });
+    }
+}
+
+function resetSubmitBtn() {
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').innerHTML = '<i class="fas fa-upload me-2"></i>提交导入任务';
+}
+</script>
+{% endblock %}

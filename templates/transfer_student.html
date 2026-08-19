@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>转专业申请</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>学生信息：</strong> {{ student.name }} ({{ student.student_id }})
+                        <br>
+                        <strong>当前班级：</strong> {{ student.class_.name }}
+                        <br>
+                        <strong>当前专业：</strong> {{ student.class_.major.name }}
+                    </div>
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="new_class_id" class="form-label">目标班级</label>
+                            <select class="form-select" id="new_class_id" name="new_class_id" required>
+                                <option value="">请选择目标班级</option>
+                                {% for class in classes %}
+                                <option value="{{ class.id }}">{{ class.name }} - {{ class.major.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">转专业原因</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="effective_date" class="form-label">生效日期</label>
+                            <input type="date" class="form-control" id="effective_date" name="effective_date" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">提交申请</button>
+                            <a href="{{ url_for('student_detail', id=student.id) }}" class="btn btn-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

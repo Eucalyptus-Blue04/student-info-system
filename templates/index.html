@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 mb-4">欢迎使用学籍信息管理系统</h1>
+            {% if current_user.is_authenticated %}
+                <p class="lead">
+                    您已登录，可以 <a href="{{ url_for('students') }}" class="btn btn-primary">查看学生列表</a>
+                    或 <a href="{{ url_for('create_student') }}" class="btn btn-success">添加新学生</a>
+                </p>
+            {% else %}
+                <p class="lead">
+                    请先 <a href="{{ url_for('login') }}" class="btn btn-primary">登录</a>
+                    或 <a href="{{ url_for('register') }}" class="btn btn-success">注册</a>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

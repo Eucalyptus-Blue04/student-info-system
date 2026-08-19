@@ -1,0 +1,4 @@
+# GitHub Linguist language detection
+*.py linguist-detectable=true
+templates/*.html linguist-language=Jinja2
+*.html linguist-detectable=false

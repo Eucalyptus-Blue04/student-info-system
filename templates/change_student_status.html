@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>修改学籍状态</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>学生信息：</strong> {{ student.name }} ({{ student.student_id }})
+                        <br>
+                        <strong>当前状态：</strong> {{ student.status }}
+                    </div>
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">新状态</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="">请选择新状态</option>
+                                {% for status in statuses %}
+                                <option value="{{ status.value }}">{{ status.value }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">变更原因</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="effective_date" class="form-label">生效日期</label>
+                            <input type="date" class="form-control" id="effective_date" name="effective_date" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">确认修改</button>
+                            <a href="{{ url_for('student_detail', id=student.id) }}" class="btn btn-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

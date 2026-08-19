@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">学生信息详情</h3>        {% if current_user.role == 'student' %}
+        <div class="btn-group">
+            <a href="{{ url_for('edit_student', id=student.id) }}" class="btn btn-warning">编辑信息</a>
+            <a href="{{ url_for('student_status_history', id=student.id) }}" class="btn btn-info">学籍记录</a>
+            <a href="{{ url_for('generate_report', id=student.id) }}" class="btn btn-success">生成报告</a>
+            {% if student.status == '在读' %}
+            <a href="{{ url_for('apply_transfer', id=student.id) }}" class="btn btn-primary">申请转专业</a>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="btn-group">
+            <a href="{{ url_for('edit_student', id=student.id) }}" class="btn btn-warning">编辑信息</a>
+            {% if current_user.role in ['admin', 'teacher'] %}
+            <a href="{{ url_for('change_student_status', id=student.id) }}" class="btn btn-danger">学籍异动</a>
+            <a href="{{ url_for('review_transfers') }}" class="btn btn-primary">转专业申请</a>
+            {% endif %}
+            <a href="{{ url_for('student_status_history', id=student.id) }}" class="btn btn-info">学籍记录</a>
+            <a href="{{ url_for('generate_report', id=student.id) }}" class="btn btn-success">生成报告</a>
+            <a href="{{ url_for('students') }}" class="btn btn-secondary">返回列表</a>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">学号：</th>
+                        <td>{{ student.student_id }}</td>
+                    </tr>
+                    <tr>
+                        <th>姓名：</th>
+                        <td>{{ student.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>性别：</th>
+                        <td>{{ student.gender }}</td>
+                    </tr>
+                    <tr>
+                        <th>年龄：</th>
+                        <td>{{ student.age }}</td>
+                    </tr>
+                    <tr>
+                        <th>院系：</th>
+                        <td>{{ student.class_.major.department.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>专业：</th>
+                        <td>{{ student.class_.major.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>班级：</th>
+                        <td>{{ student.class_.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>学籍状态：</th>
+                        <td><span class="badge {% if student.status == '在读' %}bg-success{% elif student.status == '休学' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ student.status }}
+                        </span></td>
+                    </tr>
+                    <tr>
+                        <th>入学日期：</th>
+                        <td>{{ student.admission_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    {% if student.graduation_date %}
+                    <tr>
+                        <th>毕业日期：</th>
+                        <td>{{ student.graduation_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>联系电话：</th>
+                        <td>{{ student.phone }}</td>
+                    </tr>
+                    <tr>
+                        <th>电子邮箱：</th>
+                        <td>{{ student.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>家庭住址：</th>
+                        <td>{{ student.address }}</td>
+                    </tr>
+                </table>
+            </div>
+            {% if current_user.role != 'student' %}
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">最近学籍变更记录</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>日期</th>
+                                        <th>变更内容</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for change in status_changes[:5] if status_changes %}
+                                    <tr>
+                                        <td>{{ change.created_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ change.old_status }} → {{ change.new_status }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center">暂无记录</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

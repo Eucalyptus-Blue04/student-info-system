@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>申请转专业</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>当前信息：</strong><br>
+                        姓名：{{ student.name }} ({{ student.student_id }})<br>
+                        当前专业：{{ student.class_.major.name }}<br>
+                        当前班级：{{ student.class_.name }}
+                    </div>
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="major_id" class="form-label">目标专业</label>
+                            <select class="form-select" id="major_id" name="major_id" required>
+                                <option value="">请选择专业</option>
+                                {% for major in majors %}
+                                    {% if major.id != student.class_.major_id %}
+                                    <option value="{{ major.id }}">{{ major.department.name }} - {{ major.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">申请原因</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_phone" class="form-label">联系电话</label>
+                            <input type="tel" class="form-control" id="contact_phone" name="contact_phone" 
+                                   value="{{ student.phone }}" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">提交申请</button>
+                            <a href="{{ url_for('student_detail', id=student.id) }}" class="btn btn-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

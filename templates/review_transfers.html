@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">转专业申请审核</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>申请时间</th>
+                            <th>学号</th>
+                            <th>姓名</th>
+                            <th>原专业</th>
+                            <th>目标专业</th>
+                            <th>申请原因</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transfer in transfers %}
+                        <tr>
+                            <td>{{ transfer.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ transfer.student.student_id }}</td>
+                            <td>{{ transfer.student.name }}</td>
+                            <td>{{ transfer.old_class.major.name }}</td>
+                            <td>{{ transfer.new_major.name }}</td>
+                            <td>{{ transfer.transfer_reason }}</td>
+                            <td>
+                                <span class="badge {% if transfer.status == '待审核' %}bg-warning
+                                                  {% elif transfer.status == '已通过' %}bg-success
+                                                  {% else %}bg-danger{% endif %}">
+                                    {{ transfer.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if transfer.status == '待审核' %}
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('process_transfer', id=transfer.id, action='approve') }}"
+                                       class="btn btn-success"
+                                       onclick="return confirm('确定通过该申请吗？')">通过</a>
+                                    <a href="{{ url_for('process_transfer', id=transfer.id, action='reject') }}"
+                                       class="btn btn-danger"
+                                       onclick="return confirm('确定拒绝该申请吗？')">拒绝</a>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">暂无转专业申请</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0">添加新学生</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" id="createStudentForm" novalidate>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="student_id" class="form-label">学号 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="student_id" name="student_id" required>
+                    <div class="invalid-feedback">请输入学号</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">姓名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="invalid-feedback">请输入姓名</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="gender" class="form-label">性别 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="gender" name="gender" required>
+                        <option value="">请选择性别</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                    <div class="invalid-feedback">请选择性别</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="age" class="form-label">年龄 <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="age" name="age" required min="15" max="100">
+                    <div class="invalid-feedback">请输入有效的年龄（15-100岁）</div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="department_id" class="form-label">院系 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="department_id" name="department_id" required>
+                        <option value="">请选择院系</option>
+                        {% for department in departments %}
+                        <option value="{{ department.id }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">请选择院系</div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="major_id" class="form-label">专业 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="major_id" name="major_id" required disabled>
+                        <option value="">请先选择院系</option>
+                    </select>
+                    <div class="invalid-feedback">请选择专业</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="class_id" class="form-label">班级 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="class_id" name="class_id" required disabled>
+                        <option value="">请先选择专业</option>
+                    </select>
+                    <div class="invalid-feedback">请选择班级</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="admission_date" class="form-label">入学日期 <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="admission_date" name="admission_date" required>
+                    <div class="invalid-feedback">请选择入学日期</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">联系电话 <span class="text-danger">*</span></label>
+                    <input type="tel" class="form-control" id="phone" name="phone" required pattern="[0-9]{11}">
+                    <div class="invalid-feedback">请输入11位手机号码</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">电子邮箱 <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                    <div class="invalid-feedback">请输入有效的电子邮箱地址</div>
+                </div>
+                <div class="col-12 mb-3">
+                    <label for="address" class="form-label">家庭住址 <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                    <div class="invalid-feedback">请输入家庭住址</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">添加学生</button>
+                <a href="{{ url_for('students') }}" class="btn btn-secondary">返回列表</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createStudentForm');
+    const departmentSelect = document.getElementById('department_id');
+    const majorSelect = document.getElementById('major_id');
+    const classSelect = document.getElementById('class_id');
+
+    // 重置下拉菜单
+    function resetSelect(select, defaultText, disabled = true) {
+        select.innerHTML = `<option value="">${defaultText}</option>`;
+        select.disabled = disabled;
+    }
+
+    // 加载数据到下拉菜单
+    async function loadDropdownData(url, select, defaultText, errorMessage) {
+        try {
+            select.disabled = true;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            // 检查错误
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP error! status: ${response.status}`);
+            }
+            
+            resetSelect(select, defaultText, false);
+            
+            // 处理空数据
+            if (!data || data.length === 0) {
+                select.innerHTML = `<option value="">${defaultText} (无数据)</option>`;
+                return;
+            }
+
+            // 添加选项
+            data.forEach(item => {
+                const option = new Option(item.name, item.id);
+                select.appendChild(option);
+            });
+        } catch (error) {
+            console.error(errorMessage, error);
+            resetSelect(select, `加载失败 - ${error.message}`, true);
+        }
+    }
+
+    // 表单验证
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+
+    // 当选择院系时加载专业
+    departmentSelect.addEventListener('change', function() {
+        const departmentId = this.value;
+        // 重置专业和班级选择
+        resetSelect(majorSelect, '请选择专业');
+        resetSelect(classSelect, '请先选择专业');
+        
+        if (departmentId) {
+            loadDropdownData(
+                `/api/majors?department_id=${departmentId}`,
+                majorSelect,
+                '请选择专业',
+                '加载专业列表失败'
+            );
+        }
+    });
+
+    // 当选择专业时加载班级
+    majorSelect.addEventListener('change', function() {
+        const majorId = this.value;
+        resetSelect(classSelect, '请选择班级');
+        
+        if (majorId) {
+            loadDropdownData(
+                `/api/classes?major_id=${majorId}`,
+                classSelect,
+                '请选择班级',
+                '加载班级列表失败'
+            );
+        }
+    });
+});
+</script>
+{% endblock %}
